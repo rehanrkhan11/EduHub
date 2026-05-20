@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobFilters } from "@/components/jobs/JobFilters";
-import { JobType } from "@prisma/client";
+//import { JobType } from "@prisma/client";
+import type { JobType } from "@/types";
 
 export const revalidate = 3600;
 
