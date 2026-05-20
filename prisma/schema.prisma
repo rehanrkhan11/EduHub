@@ -1,0 +1,110 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")        // Used for regular queries (Port 6543)
+  directUrl = env("DIRECT_DATABASE_URL")  // Used for migrations/db push (Port 5432)
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String?
+  email         String     @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role       @default(USER)
+  createdAt     DateTime   @default(now())
+  accounts      Account[]
+  sessions      Session[]
+  jobs          Job[]
+  notes         NoteFile[]
+  downloads     Download[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  authorId    String
+  title       String
+  slug        String   @unique
+  company     String
+  location    String
+  type        String
+  description String   @db.Text
+  tags        String[]
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([published])
+}
+
+model NoteFile {
+  id            String     @id @default(cuid())
+  uploaderId    String
+  title         String
+  subject       String
+  semester      String?
+  fileKey       String     @unique
+  fileUrl       String
+  downloadCount Int        @default(0)
+  createdAt     DateTime   @default(now())
+  uploader      User       @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  downloads     Download[]
+
+  @@index([subject])
+}
+
+model Download {
+  id           String   @id @default(cuid())
+  userId       String
+  noteId       String
+  downloadedAt DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Renamed from 'note' to 'noteFile' to match NoteFile's 'downloads' relation
+  noteFile     NoteFile @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, noteId])
+}

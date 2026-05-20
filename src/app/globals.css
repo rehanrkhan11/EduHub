@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    /* You can add more shadcn-style variables here later */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+}
+
+body {
+  /* Using slate-50 gives a subtle, professional grey background */
+  @apply bg-slate-50 text-slate-900 antialiased;
+  min-height: 100vh;
+}
