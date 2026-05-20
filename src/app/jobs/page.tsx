@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobFilters } from "@/components/jobs/JobFilters";
+import { JobType } from "@prisma/client";
 
-export const revalidate = 3600; // ISR — regenerate every hour
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Job Board",
@@ -18,22 +19,44 @@ interface SearchParams {
   page?: string;
 }
 
-export default async function JobsPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const page = Number(searchParams.page ?? 1);
   const pageSize = 12;
   const skip = (page - 1) * pageSize;
 
   const where = {
     published: true,
+
     ...(searchParams.q && {
       OR: [
-        { title: { contains: searchParams.q, mode: "insensitive" as const } },
-        { company: { contains: searchParams.q, mode: "insensitive" as const } },
+        {
+          title: {
+            contains: searchParams.q,
+            mode: "insensitive" as const,
+          },
+        },
+        {
+          company: {
+            contains: searchParams.q,
+            mode: "insensitive" as const,
+          },
+        },
       ],
     }),
-    ...(searchParams.type && { type: searchParams.type }),
+
+    ...(searchParams.type && {
+      type: searchParams.type as JobType,
+    }),
+
     ...(searchParams.location && {
-      location: { contains: searchParams.location, mode: "insensitive" as const },
+      location: {
+        contains: searchParams.location,
+        mode: "insensitive" as const,
+      },
     }),
   };
 
@@ -42,9 +65,21 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
       where,
       skip,
       take: pageSize,
-      orderBy: { createdAt: "desc" },
-      select: { id: true, title: true, slug: true, company: true, location: true, type: true, tags: true, createdAt: true },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        company: true,
+        location: true,
+        type: true,
+        tags: true,
+        createdAt: true,
+      },
     }),
+
     prisma.job.count({ where }),
   ]);
 
@@ -53,8 +88,13 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Job Board</h1>
-        <p className="mt-2 text-gray-500">{total} open position{total !== 1 ? "s" : ""}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          Job Board
+        </h1>
+
+        <p className="mt-2 text-gray-500">
+          {total} open position{total !== 1 ? "s" : ""}
+        </p>
       </div>
 
       <Suspense>
@@ -63,20 +103,30 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
 
       {jobs.length === 0 ? (
         <div className="mt-16 text-center text-gray-400">
-          <p className="text-lg">No jobs found matching your criteria.</p>
+          <p className="text-lg">
+            No jobs found matching your criteria.
+          </p>
         </div>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCard
+              key={job.id}
+              job={{
+                ...job,
+                type: job.type as JobType,
+              }}
+            />
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-10 flex items-center justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {Array.from(
+            { length: totalPages },
+            (_, i) => i + 1
+          ).map((p) => (
             <a
               key={p}
               href={`/jobs?page=${p}`}
