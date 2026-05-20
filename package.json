@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build":  "prisma generate && next build"",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
@@ -43,9 +44,4 @@
     "tsx": "^4.16.0",
     "typescript": "^5.5.0"
   }
-  "scripts": {
-  "postinstall": "prisma generate",
-  "build": "prisma generate && next build",
-  ...
-}
 }
