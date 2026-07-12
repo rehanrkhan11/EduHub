@@ -51,6 +51,44 @@ export const createNoteSchema = z.object({
 
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
 
+// ─── Resources (info / links / files, admin-only) ───────────────────────────
+
+export const RESOURCE_CATEGORIES = [
+  "article",
+  "course",
+  "tool",
+  "announcement",
+  "scholarship",
+  "other",
+] as const;
+
+// At least one of `url` or an uploaded file (fileName+fileType) must be present.
+export const createResourceSchema = z
+  .object({
+    title: z.string().min(3, "Title must be at least 3 characters").max(200),
+    description: z.string().min(10, "Description must be at least 10 characters").max(5000),
+    category: z.enum(RESOURCE_CATEGORIES, {
+      errorMap: () => ({ message: "Invalid category" }),
+    }),
+    tags: z.array(z.string().max(30)).max(10, "Maximum 10 tags").default([]),
+    url: z.string().url("Must be a valid URL").optional(),
+    fileName: z.string().min(1).optional(),
+    fileType: z.enum(ALLOWED_FILE_TYPES).optional(),
+  })
+  .refine((data) => !!data.url || (!!data.fileName && !!data.fileType), {
+    message: "Provide a URL or a file to upload",
+    path: ["url"],
+  });
+
+export type CreateResourceInput = z.infer<typeof createResourceSchema>;
+
+export const resourcesQuerySchema = z.object({
+  category: z.enum(RESOURCE_CATEGORIES).optional(),
+  q: z.string().max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(12),
+});
+
 // ─── Query params ────────────────────────────────────────────────────────────
 
 export const jobsQuerySchema = z.object({
