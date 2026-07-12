@@ -41,13 +41,15 @@ export async function createPresignedUploadUrl(options: {
   fileName: string;
   fileType: string;
   userId: string;
+  folder?: string; // e.g. "notes" (default) or "resources"
 }): Promise<{ uploadUrl: string; fileKey: string; publicUrl: string }> {
   if (!ALLOWED_TYPES.includes(options.fileType)) {
     throw new Error(`File type "${options.fileType}" is not allowed.`);
   }
 
   const ext = options.fileName.split(".").pop();
-  const fileKey = `notes/${options.userId}/${randomUUID()}.${ext}`;
+  const folder = options.folder ?? "notes";
+  const fileKey = `${folder}/${options.userId}/${randomUUID()}.${ext}`;
 
   const command = new PutObjectCommand({
     Bucket: BUCKET,
