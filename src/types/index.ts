@@ -70,6 +70,40 @@ export interface PresignedUrlResponse {
   publicUrl: string;
 }
 
+// ─── Resources ───────────────────────────────────────────────────────────────
+
+export type ResourceCategory =
+  | "article"
+  | "course"
+  | "tool"
+  | "announcement"
+  | "scholarship"
+  | "other";
+
+export interface Resource {
+  id: string;
+  authorId: string;
+  title: string;
+  description: string;
+  category: ResourceCategory;
+  tags: string[];
+  url: string | null;
+  fileKey: string | null;
+  fileUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateResourceInput {
+  title: string;
+  description: string;
+  category: ResourceCategory;
+  tags: string[];
+  url?: string;
+  fileName?: string;
+  fileType?: string;
+}
+
 // ─── API ─────────────────────────────────────────────────────────────────────
 
 export interface ApiResponse<T = unknown> {
